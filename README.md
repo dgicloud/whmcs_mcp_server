@@ -64,35 +64,6 @@ de escrita do processo PHP em `modules/addons/whmcs_mcp_server/storage/`.
    o cliente MCP para usar `https://<dominio-whmcs>/modules/addons/whmcs_mcp_server/mcp.php`
    com `Authorization: Bearer <chave>`.
 
-## WHMCS em Docker Compose
-
-Não existe `docker-compose.yml` neste módulo e ele não inicia um container
-separado. O `docker compose` a executar é o da instalação que hospeda o WHMCS.
-Rode o Composer **dentro do serviço PHP/WHMCS**, para que o `vendor` seja criado
-no mesmo volume que o servidor web atende.
-
-Exemplo (substitua `whmcs` pelo nome real do serviço e `/var/www/html` pelo
-`WHMCS_ROOT` do container):
-
-```bash
-docker compose exec whmcs sh -lc '
-  cd /var/www/html/modules/addons/whmcs_mcp_server &&
-  composer install --no-dev --prefer-dist --optimize-autoloader
-'
-```
-
-Se a imagem de produção não contém Composer, inclua-o na etapa de build da imagem
-ou execute uma imagem temporária de Composer montando o mesmo volume do WHMCS.
-Não gere o `vendor` no host e espere que ele apareça no container, salvo se esse
-caminho for explicitamente um volume compartilhado.
-
-Após instalar, reinicie apenas o serviço que executa PHP se ele usar OPcache sem
-validação de timestamps:
-
-```bash
-docker compose restart whmcs
-```
-
 ## Atualização e recuperação
 
 - Para atualizar código, preserve `composer.lock` e execute novamente
