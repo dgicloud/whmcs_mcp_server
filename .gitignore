@@ -1,0 +1,7 @@
+# Dependências PHP reproduzíveis a partir de composer.lock.
+modules/addons/whmcs_mcp_server/vendor/
+
+# Artefatos locais/de runtime do módulo.
+modules/addons/whmcs_mcp_server/error_log
+modules/addons/whmcs_mcp_server/storage/sessions/*
+!modules/addons/whmcs_mcp_server/storage/sessions/.gitkeep

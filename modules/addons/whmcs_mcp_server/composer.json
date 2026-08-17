@@ -1,0 +1,39 @@
+{
+    "name": "hadcloud/whmcs-mcp-server",
+    "description": "MCP Server dentro do proprio WHMCS via Streamable HTTP",
+    "type": "whmcs-addon",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.1",
+        "mcp/sdk": "^0.7"
+    },
+    "replace": {
+        "psr/log": "*",
+        "psr/http-message": "*",
+        "psr/http-factory": "*",
+        "psr/http-client": "*",
+        "psr/http-server-handler": "*",
+        "psr/http-server-middleware": "*",
+        "psr/container": "*",
+        "psr/simple-cache": "*",
+        "psr/cache": "*"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@php scripts/fix-vendor-compat.php"
+        ],
+        "post-update-cmd": [
+            "@php scripts/fix-vendor-compat.php"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "HadCloud\\Mcp\\": "lib/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.1.34"
+        }
+    }
+}
