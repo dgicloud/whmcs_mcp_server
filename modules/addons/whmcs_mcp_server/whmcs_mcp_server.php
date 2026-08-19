@@ -8,13 +8,14 @@
  *
  * @package     HadCloud\WhmcsMcp
  * @author      HAD Cloud
- * @version     1.1.0
+ * @version     1.3.1
  */
 
 use HadCloud\Mcp\AdminPanel;
 use HadCloud\Mcp\Alerts;
 use HadCloud\Mcp\ApiKeys;
 use HadCloud\Mcp\Audit;
+use HadCloud\Mcp\RateLimiter;
 use HadCloud\Mcp\Settings;
 use HadCloud\Mcp\ToolState;
 use HadCloud\Mcp\Tools;
@@ -33,6 +34,7 @@ require_once __DIR__ . '/lib/ToolState.php';
 require_once __DIR__ . '/lib/ApiKeys.php';
 require_once __DIR__ . '/lib/Audit.php';
 require_once __DIR__ . '/lib/Alerts.php';
+require_once __DIR__ . '/lib/RateLimiter.php';
 require_once __DIR__ . '/lib/AdminPanel.php';
 
 /**
@@ -75,6 +77,7 @@ function whmcs_mcp_server_activate(): array
     ApiKeys::table();
     Audit::table();
     Alerts::table();
+    RateLimiter::table();
 
     // Migra a chave única legada (v1.0.0) para a tabela de chaves
     ApiKeys::migrateLegacy();
@@ -121,6 +124,7 @@ function whmcs_mcp_server_upgrade(array $vars): void
     ApiKeys::migrateLegacy();
     Audit::table();
     Alerts::table();
+    RateLimiter::table();
 
     if (Settings::get('session_ttl') === null) {
         Settings::set('session_ttl', '7200');

@@ -23,6 +23,8 @@ https://<dominio-do-whmcs>/modules/addons/whmcs_mcp_server/mcp.php
   exportação CSV e limpeza manual.
 - Allowlist de IPs, validade configurável das sessões MCP e alertas de auditoria
   por e-mail ou Telegram.
+- Limitação por IP de 300 requisições por minuto e, adicionalmente, de 20
+  falhas de autenticação a cada 5 minutos.
 
 ## Requisitos
 
@@ -97,6 +99,9 @@ No endpoint MCP, a autorização é formada por dois controles:
 2. Se a allowlist de IPs estiver preenchida em **Settings**, o IP de origem
    também deve constar nela. Uma allowlist vazia permite qualquer IP que possua
    um token válido.
+
+O endpoint não autoriza chamadas de páginas em outras origens por CORS. Isso não
+afeta clientes MCP que se conectam diretamente por HTTP.
 
 Os tokens não possuem escopos individuais. Cada token ativo recebe exatamente o
 conjunto de ferramentas globalmente exposto. Para reduzir o acesso:

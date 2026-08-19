@@ -14,7 +14,6 @@ namespace HadCloud\Mcp;
 use Mcp\Server;
 use Mcp\Schema\Tool;
 use Mcp\Server\Session\FileSessionStore;
-use Mcp\Server\Transport\Http\Middleware\CorsMiddleware;
 use Mcp\Server\Transport\Http\Middleware\DnsRebindingProtectionMiddleware;
 use Mcp\Server\Transport\Http\Middleware\ProtocolVersionMiddleware;
 use Mcp\Server\Transport\StreamableHttpTransport;
@@ -23,7 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 final class McpApplication
 {
-    private const VERSION = '1.0.0';
+    private const VERSION = '1.3.1';
 
     public function __construct(
         private readonly Security $security = new Security(),
@@ -36,14 +35,20 @@ final class McpApplication
     public function handle(): void
     {
         try {
-            // Preflight CORS
-            if (($this->method() ?? 'GET') === 'OPTIONS') {
-                $this->emitPreflight();
+            $endpointLimit = RateLimiter::endpoint($this->security->clientIp());
+            if (!$endpointLimit['allowed']) {
+                $this->emitRateLimit($endpointLimit['retry_after']);
                 return;
             }
 
             // Autenticação obrigatória (Bearer token)
             if (!$this->security->authorize()) {
+                $authLimit = RateLimiter::authFailure($this->security->clientIp());
+                if (!$authLimit['allowed']) {
+                    $this->emitRateLimit($authLimit['retry_after']);
+                    return;
+                }
+
                 Audit::record([
                     'tool' => '__auth__',
                     'status' => 'auth_fail',
@@ -99,7 +104,6 @@ final class McpApplication
             $transport = new StreamableHttpTransport(
                 $request,
                 middleware: [
-                    new CorsMiddleware(),
                     new DnsRebindingProtectionMiddleware(
                         array_values(array_filter(['localhost', '127.0.0.1', '[::1]', $host]))
                     ),
@@ -114,7 +118,7 @@ final class McpApplication
             $this->logError($e);
             $this->emitJson(500, [
                 'jsonrpc' => '2.0',
-                'error' => ['code' => -32603, 'message' => 'Internal error: ' . $e->getMessage()],
+                'error' => ['code' => -32603, 'message' => 'Internal error'],
             ]);
         }
     }
@@ -365,13 +369,13 @@ final class McpApplication
         echo $response->getBody()->getContents();
     }
 
-    private function emitPreflight(): void
+    private function emitRateLimit(int $retryAfter): void
     {
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept, Mcp-Session-Id');
-        header('Access-Control-Max-Age: 86400');
-        http_response_code(204);
+        header('Retry-After: ' . max(1, $retryAfter));
+        $this->emitJson(429, [
+            'jsonrpc' => '2.0',
+            'error' => ['code' => -32029, 'message' => 'Too many requests'],
+        ]);
     }
 
     /**

@@ -21,7 +21,7 @@ final class AdminPanel
         'ops'  => ['order', 'ticket', 'system'],
     ];
 
-    private const VERSION = '1.3.0';
+    private const VERSION = '1.3.1';
 
     public static function version(): string
     {
@@ -35,8 +35,7 @@ final class AdminPanel
 
         $modulelink = $vars['modulelink'];
 
-        $endpointUrl = (string) \WHMCS\Config\Setting::getValue('SystemURL')
-            . 'modules/addons/whmcs_mcp_server/mcp.php';
+        $endpointUrl = self::endpointUrl();
 
         echo '<style>' . self::css() . '</style>';
 
@@ -87,7 +86,7 @@ final class AdminPanel
         echo '</div>';
 
         echo '<div class="mcp-endpoint">'
-            . '<strong>Endpoint:</strong> <code>' . $endpointUrl . '</code>'
+            . '<strong>Endpoint:</strong> <code>' . htmlspecialchars($endpointUrl) . '</code>'
             . '</div>';
 
         echo '</div>';
@@ -556,12 +555,18 @@ final class AdminPanel
             . '<div class="panel-body">'
             . '<p><strong>Claude Code:</strong></p>'
             . '<pre>claude mcp add --transport http whmcs '
-            . htmlspecialchars((string) \WHMCS\Config\Setting::getValue('SystemURL'))
-            . 'modules/addons/whmcs_mcp_server/mcp.php '
+            . htmlspecialchars(self::endpointUrl()) . ' '
             . '--header "Authorization: Bearer &lt;SUA_API_KEY&gt;"</pre>'
             . '<p><strong>Claude Desktop:</strong> adicione ao <code>claude_desktop_config.json</code>:</p>'
             . '<pre>{\n  "mcpServers": {\n    "whmcs": {\n      "type": "http",\n      "url": "&lt;URL_DO_ENDPOINT&gt;",\n      "headers": { "Authorization": "Bearer &lt;SUA_API_KEY&gt;" }\n    }\n  }\n}</pre>'
             . '</div></div>';
+    }
+
+    private static function endpointUrl(): string
+    {
+        $systemUrl = (string) \WHMCS\Config\Setting::getValue('SystemURL');
+
+        return rtrim($systemUrl, '/') . '/modules/addons/whmcs_mcp_server/mcp.php';
     }
 
     // ------------------------------------------------------------------
